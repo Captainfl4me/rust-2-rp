@@ -10,4 +10,4 @@ bmp-280|Basic reading of BMP280 pressure and temperature and displaying on seria
 
 ## Compile
 
-To compile and flash the RP2040, just press the BOOT button while plugging the board in the computer. Then, just run ````cargo run --release --bin PACKAGE_NAME```.
+To compile and flash the RP2040, just press the BOOT button while plugging the board in the computer. Then, just run ```cargo run --release --bin PACKAGE_NAME```.
