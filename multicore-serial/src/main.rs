@@ -159,7 +159,7 @@ fn core1_task(timer: &Timer, peripheral_clock_freq: &Rate<u32, 1, 1>) -> ! {
     );
 
     // Infinite colour wheel loop
-    let mut n: u8 = 128;
+    let mut n = 128;
     loop {
         ws.write(brightness(once(wheel(n)), 100)).unwrap();
         n = n.wrapping_add(1);
