@@ -9,7 +9,6 @@ use core::iter::once;
 use fugit::{RateExtU32, ExtU32};
 use panic_halt as _;
 use embedded_hal::timer::CountDown;
-use rp2040_hal::pac::adc::fcs::W;
 use waveshare_rp2040_zero::entry;
 use waveshare_rp2040_zero::{
     hal::{
@@ -74,7 +73,7 @@ fn main() -> ! {
         .device_class(2) // from: https://www.usb.org/defined-class-codes
         .build();
 
-    let mut sio = Sio::new(pac.SIO);
+    let sio = Sio::new(pac.SIO);
     let pins = Pins::new(
         pac.IO_BANK0,
         pac.PADS_BANK0,
