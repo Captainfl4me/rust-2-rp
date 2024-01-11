@@ -427,6 +427,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "rp2040-flash"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2007f9701924b88cbffc172cdf09e01b9c03ecd0b2f59bc6eea5283982855438"
+dependencies = [
+ "rp2040-hal",
+]
+
+[[package]]
 name = "rp2040-hal"
 version = "0.9.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -563,6 +572,26 @@ dependencies = [
  "proc-macro2",
  "quote",
  "unicode-ident",
+]
+
+[[package]]
+name = "test-rom"
+version = "0.1.0"
+dependencies = [
+ "cortex-m",
+ "cortex-m-rt",
+ "embedded-hal",
+ "fugit",
+ "heapless",
+ "nb 1.1.0",
+ "panic-halt",
+ "rp2040-boot2",
+ "rp2040-flash",
+ "rp2040-hal",
+ "smart-leds",
+ "usb-device",
+ "usbd-serial",
+ "ws2812-pio",
 ]
 
 [[package]]
