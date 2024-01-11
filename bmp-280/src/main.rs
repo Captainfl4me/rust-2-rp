@@ -29,9 +29,9 @@ use usb_device::{class_prelude::*, prelude::*};
 use usbd_serial::SerialPort;
 
 use smart_leds::{brightness, SmartLedsWrite, RGB8};
+use ws2812_pio::Ws2812;
 
 use bmp280_rs::{BMP280, I2CAddress, Config};
-use ws2812_pio::Ws2812;
 
 // Used to demonstrate writing formatted strings
 use core::fmt::Write;
