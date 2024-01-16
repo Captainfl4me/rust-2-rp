@@ -615,6 +615,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "uart"
+version = "0.1.0"
+dependencies = [
+ "cortex-m-rt",
+ "embedded-hal",
+ "fugit",
+ "nb 1.1.0",
+ "panic-halt",
+ "rp2040-boot2",
+ "rp2040-hal",
+ "smart-leds",
+ "ws2812-pio",
+]
+
+[[package]]
 name = "unicode-ident"
 version = "1.0.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"

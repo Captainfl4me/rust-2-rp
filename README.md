@@ -7,6 +7,8 @@ Package|Description
 basic-blink|RGB wheel with adressable built-in LED
 multicore-serial|Use of the two core and test for writing and reading on serial console
 bmp-280|Basic reading of BMP280 pressure and temperature and displaying on serial console
+test-rom|Basic write and read to ROM
+uart|Uart Writing
 
 ## Compile
 
