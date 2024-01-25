@@ -575,6 +575,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "test-pwm"
+version = "0.1.0"
+dependencies = [
+ "cortex-m-rt",
+ "embedded-hal",
+ "fugit",
+ "heapless",
+ "nb 1.1.0",
+ "panic-halt",
+ "rp2040-boot2",
+ "rp2040-hal",
+ "smart-leds",
+ "ws2812-pio",
+]
+
+[[package]]
 name = "test-rom"
 version = "0.1.0"
 dependencies = [
