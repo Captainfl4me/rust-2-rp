@@ -30,6 +30,7 @@ use usbd_serial::SerialPort;
 use ws2812_pio::Ws2812;
 
 // Used to demonstrate writing formatted strings
+#[allow(unused_imports)]
 use heapless::String;
 
 #[entry]
@@ -90,14 +91,10 @@ fn main() -> ! {
             said_hello = true;
             let _ = serial.write(b"Hello, World!\r\n");
 
-            let text: String<64> = String::new();
+            // Write a formatted string to demonstrate the heapless crate
+            // let mut text: String<64> = String::new();
             // writeln!(&mut text, "Current timer ticks: {}", time).unwrap();
-
-            // This only works reliably because the number of bytes written to
-            // the serial port is smaller than the buffers available to the USB
-            // peripheral. In general, the return value should be handled, so that
-            // bytes not transferred yet don't get lost.
-            let _ = serial.write(text.as_bytes());
+            // let _ = serial.write(text.as_bytes());
         }
 
         // Check for new data
