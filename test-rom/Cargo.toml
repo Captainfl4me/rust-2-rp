@@ -2,6 +2,7 @@
 name = "test-rom"
 version = "0.1.0"
 edition = "2021"
+resolver = "2"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -20,6 +21,8 @@ usb-device = "0.2.9"
 heapless = "0.8.0"
 nb = "1.1.0"
 rp2040-flash = "0.4.0"
+littlefs2 = "0.4.0"
+generic-array = "1.0.0"
 
 [features]
 # This is the set of features we enable by default
@@ -46,3 +49,5 @@ disable-intrinsics = ["rp2040-hal/disable-intrinsics"]
 
 # This enables ROM functions for f64 math that were not present in the earliest RP2040s
 rom-v2-intrinsics = ["rp2040-hal/rom-v2-intrinsics"]
+
+c-stubs = ["littlefs2/c-stubs"]

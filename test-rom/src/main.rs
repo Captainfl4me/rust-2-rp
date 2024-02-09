@@ -33,7 +33,51 @@ use rp2040_flash::flash;
 const XIP_BASE: u32 = 0x10000000;
 const PAGE_SIZE: u32 = 256;
 const SECTOR_SIZE: u32 = 4 * 1024;
+const PROGRAM_SIZE: u32 = SECTOR_SIZE * 30; // Protect zone for program
 const FLASH_SIZE: u32 = 2 * 1024 * 1024;
+use littlefs2::driver::Storage;
+use littlefs2::fs::Filesystem;
+use littlefs2::path::PathBuf;
+use littlefs2::io::SeekFrom;
+use generic_array::typenum::U256;
+
+struct RpRom;
+impl Storage for RpRom {
+    type CACHE_SIZE = U256;
+    type LOOKAHEAD_SIZE = U256;
+
+    const READ_SIZE: usize = 256;
+    const WRITE_SIZE: usize = PAGE_SIZE as usize;
+    const BLOCK_SIZE: usize = SECTOR_SIZE as usize;
+    const BLOCK_COUNT: usize = (FLASH_SIZE-PROGRAM_SIZE / SECTOR_SIZE) as usize;
+    const BLOCK_CYCLES: isize = 1000;
+
+    fn read(&mut self, addr: usize, buf: &mut [u8]) -> Result<usize, littlefs2::io::Error> {
+        for i in 0..(buf.len() / PAGE_SIZE as usize) {
+            unsafe {
+                let read_buffer = *((addr as u32 + XIP_BASE + PROGRAM_SIZE) as *const [u8; PAGE_SIZE as usize]);
+                buf[(i*PAGE_SIZE as usize)..((i+1)*PAGE_SIZE as usize)].copy_from_slice(&read_buffer[..]);
+            }
+        }
+        Ok(buf.len())
+    }
+    fn write(&mut self, addr: usize, buf: &[u8]) -> Result<usize, littlefs2::io::Error> {
+        unsafe {
+            cortex_m::interrupt::free(|_cs| {
+                flash::flash_range_program(addr as u32 + PROGRAM_SIZE, &buf, true);
+            });
+        }
+        Ok(buf.len())
+    }
+    fn erase(&mut self, addr: usize, len: usize) -> Result<usize, littlefs2::io::Error> {
+        unsafe {
+            cortex_m::interrupt::free(|_cs| {
+                flash::flash_range_erase(addr as u32 + PROGRAM_SIZE, len as u32, true);
+            });
+        }
+        Ok(len)
+    }
+}
 
 #[entry]
 fn main() -> ! {
@@ -92,27 +136,48 @@ fn main() -> ! {
     );
     ws.write(brightness(once(RGB8::new(255, 0, 0)), 100)).unwrap();
 
-    let mut buffer = [0u8; PAGE_SIZE as usize];
+    while timer.get_counter().ticks() <= 1_000_000 {
+        usb_dev.poll(&mut [&mut serial]);
+    }
+    let _ = serial.write(b"Hello !\r\n");
+
+    let mut buffer = [0u8; 1];
+    let mut storage = RpRom;
+    match Filesystem::format(&mut storage) {
+        Ok(_) => (),
+        Err(e) => {
+            let mut text: String<64> = String::new();            
+            writeln!(&mut text, "Error formatting: {:?}", e).unwrap();
+            let _ = serial.write(text.as_bytes());
+        },
+    }
+
+    let _ = serial.write(b"Format done !\r\n");
+    let mut alloc = Filesystem::allocate();
+    let fs = Filesystem::mount(&mut alloc, &mut storage).unwrap();
 
     let mut delay = timer.count_down();
+    let mut bright = [0u8; 1];
     loop {
-        if timer.get_counter().ticks() >= 2_000_000 {
-            let mut text: String<64> = String::new();
-            
-            unsafe {
-                let addr = XIP_BASE + FLASH_SIZE - SECTOR_SIZE;
-                writeln!(&mut text, "Buff = {}| Ptr = {}!", buffer[0], *(addr as *const u8)).unwrap();
-                let _ = serial.write(text.as_bytes());
-                cortex_m::interrupt::free(|_cs| {
-                    flash::flash_range_erase_and_program(FLASH_SIZE - SECTOR_SIZE, &buffer, true);
-                });
-                ws.write(brightness(once(RGB8::new(0, 255, 0)), *(addr as *const u8))).unwrap();
+        fs.open_file_with_options_and_then(
+            |options| options.read(true).write(true).create(true),
+            &PathBuf::from(b"example.txt"),
+            |file| {
+                file.write(&buffer)?;
+                file.seek(SeekFrom::Start(0)).unwrap();
+                assert_eq!(file.read(&mut bright)?, 1);
+                Ok(())
             }
-            buffer[0] += 1;
+        ).unwrap();
 
-            delay.start(10.millis());
-            let _ = nb::block!(delay.wait());
-        }
+        let mut text: String<64> = String::new();            
+        writeln!(&mut text, "Buff = {}| Ptr = {}!", buffer[0], bright[0]).unwrap();
+        let _ = serial.write(text.as_bytes());
+        ws.write(brightness(once(RGB8::new(0, 255, 0)), bright[0])).unwrap();
+        buffer[0] = buffer[0].wrapping_add(1);
+
+        delay.start(50.millis());
+        let _ = nb::block!(delay.wait());
 
         usb_dev.poll(&mut [&mut serial]);
     }
