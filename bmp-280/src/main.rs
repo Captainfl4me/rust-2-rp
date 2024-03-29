@@ -127,7 +127,7 @@ fn main() -> ! {
             let pressure = bmp.read_pressure(&mut i2c).unwrap() as f32 / 256.0;
             
             writeln!(&mut text, "{} {}\r\n", temp, pressure).unwrap();
-            serial.write(text.as_bytes()).unwrap();
+            let _ = serial.write(text.as_bytes());
             ws.write(brightness(once(RGB8::new(0, 255, 0)), i)).unwrap();
             i = (i + 1) % 100;
             
