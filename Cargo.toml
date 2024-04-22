@@ -2,7 +2,7 @@
 resolver = "2"
 members = [
     "basic-blink", 
-    "bmp-280", 
+    "bmp-280", "irq_test", 
     "multicore-serial",
 	"test-pwm",
     "test-rom",

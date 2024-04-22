@@ -65,7 +65,7 @@ impl Storage for RpRom {
     fn write(&mut self, addr: usize, buf: &[u8]) -> Result<usize, littlefs2::io::Error> {
         unsafe {
             cortex_m::interrupt::free(|_cs| {
-                flash::flash_range_program(addr as u32 + PROGRAM_SIZE, &buf, true);
+                flash::flash_range_program(addr as u32 + PROGRAM_SIZE, buf, true);
             });
         }
         Ok(buf.len())
@@ -171,7 +171,7 @@ fn main() -> ! {
     loop {
         let mut run_path: String<128> = String::new();
         // Create a new dir for the current run
-        fs.read_dir_and_then(&Path::from_str_with_nul("/\0"), |dirs| {
+        fs.read_dir_and_then(Path::from_str_with_nul("/\0"), |dirs| {
             let dir_count = dirs.count() - 2; // -2 because of /. and /..
             if dir_count > 9999 {
                 panic!("Too many runs, please clear the storage");
@@ -185,7 +185,7 @@ fn main() -> ! {
             usb_dev.poll(&mut [&mut serial]);
             let mut temp_str: String<128> = String::new();
             write!(&mut temp_str, "{}\0", run_path).unwrap();
-            fs.create_dir(&Path::from_str_with_nul(&temp_str)).unwrap();
+            fs.create_dir(Path::from_str_with_nul(&temp_str)).unwrap();
             let _ = serial.write(b"Create run dir\r\n");
             Ok(())
         })
@@ -196,7 +196,7 @@ fn main() -> ! {
 
         fs.open_file_with_options_and_then(
             |options| options.read(true).append(true).create(true),
-            &Path::from_str_with_nul(temp_path.as_str()),
+            Path::from_str_with_nul(temp_path.as_str()),
             |file| {
                 file.write(b"Test write file !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\0")?;
 
