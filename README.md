@@ -10,6 +10,7 @@ bmp-280|Basic reading of BMP280 pressure and temperature and displaying on seria
 test-rom|Basic write and read to ROM (see last section additional deps)
 test-pwm|Basic PWM generator for modelism servo (3 states test)
 uart|Uart Writing
+irq_test|Test IRQ using custom RAM function as interrupt handler.
 
 ## Compile
 
