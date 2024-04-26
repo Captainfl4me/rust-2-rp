@@ -25,7 +25,7 @@ use waveshare_rp2040_zero::{
 use cortex_m::prelude::*;
 use ws2812_pio::Ws2812;
 
-static mut ALARM: Mutex<RefCell<Option<hal::timer::Alarm0>>> = Mutex::new(RefCell::new(None));
+static ALARM: Mutex<RefCell<Option<hal::timer::Alarm0>>> = Mutex::new(RefCell::new(None));
 
 #[entry]
 fn main() -> ! {
@@ -84,9 +84,7 @@ fn main() -> ! {
         let _ = alarm_0.schedule(2.secs());
         alarm_0.enable_interrupt();
 
-        unsafe {
-            ALARM.borrow(cs).replace(Some(alarm_0));
-        }
+        ALARM.borrow(cs).replace(Some(alarm_0));
         // Unmask the timer0 IRQ so that it will generate an interrupt
         unsafe {
             pac::NVIC::unmask(pac::Interrupt::TIMER_IRQ_0);
@@ -126,7 +124,7 @@ fn wheel(mut wheel_pos: u8) -> RGB8 {
 #[link_section = ".data.ram_func"]
 extern "C" fn timer_irq_0() {
     critical_section::with(|cs| {
-        let alarm = unsafe { ALARM.borrow(cs).take() };
+        let alarm = ALARM.borrow(cs).take();
         if let Some(mut alarm) = alarm {
             alarm.clear_interrupt();
         }
