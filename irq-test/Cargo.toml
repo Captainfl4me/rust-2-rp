@@ -1,5 +1,5 @@
 [package]
-name = "irq_test"
+name = "irq-test"
 version = "0.1.0"
 edition = "2021"
 

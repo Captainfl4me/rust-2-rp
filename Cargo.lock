@@ -426,7 +426,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "irq_test"
+name = "irq-test"
 version = "0.1.0"
 dependencies = [
  "cortex-m",
@@ -536,6 +536,26 @@ name = "micromath"
 version = "2.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c3c8dda44ff03a2f238717214da50f65d5a53b45cd213a7370424ffdb6fae815"
+
+[[package]]
+name = "multicore-lockout-irq"
+version = "0.1.0"
+dependencies = [
+ "cortex-m",
+ "cortex-m-rt",
+ "critical-section",
+ "embedded-hal",
+ "fugit",
+ "heapless 0.8.0",
+ "nb 1.1.0",
+ "panic-halt",
+ "rp2040-boot2",
+ "rp2040-hal",
+ "smart-leds",
+ "usb-device",
+ "usbd-serial",
+ "ws2812-pio",
+]
 
 [[package]]
 name = "multicore-serial"
