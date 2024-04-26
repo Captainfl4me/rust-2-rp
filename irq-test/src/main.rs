@@ -120,7 +120,7 @@ fn wheel(mut wheel_pos: u8) -> RGB8 {
     }
 }
 
-#[inline(always)]
+#[inline(never)]
 #[link_section = ".data.ram_func"]
 extern "C" fn timer_irq_0() {
     critical_section::with(|cs| {
