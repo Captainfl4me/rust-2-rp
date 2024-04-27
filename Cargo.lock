@@ -550,6 +550,7 @@ dependencies = [
  "nb 1.1.0",
  "panic-halt",
  "rp2040-boot2",
+ "rp2040-flash",
  "rp2040-hal",
  "smart-leds",
  "usb-device",

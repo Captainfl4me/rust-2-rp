@@ -5,6 +5,7 @@ mod waveshare_rp2040_zero;
 
 use core::iter::once;
 use panic_halt as _;
+use rp2040_flash::flash;
 use smart_leds::{brightness, SmartLedsWrite, RGB8};
 use waveshare_rp2040_zero::entry;
 use waveshare_rp2040_zero::{
@@ -13,7 +14,6 @@ use waveshare_rp2040_zero::{
         multicore::{Multicore, Stack},
         pac,
         pio::PIOExt,
-        rom_data,
         timer::Timer,
         watchdog::Watchdog,
         Sio,
@@ -103,23 +103,41 @@ fn main() -> ! {
 #[inline(never)]
 #[link_section = ".data.ram_func"]
 extern "C" fn fifo_wait_in_ram() {
-    critical_section::with(|_| {
-        let pac = unsafe { pac::Peripherals::steal() };
-        let mut sio = Sio::new(pac.SIO);
-        if let Some(cmd) = sio.fifo.read() {
-            if cmd != LOCKOUT_CORE {
-                return;
-            }
+    // critical_section::with(|_| {
+    if fifo_is_read_ready() {
+        if fifo_read() != LOCKOUT_CORE {
+            return;
+        }
 
-            loop {
-                if sio.fifo.read_blocking() == UNLOCKOUT_CORE {
-                    break;
-                }
+        loop {
+            if fifo_is_read_ready() && fifo_read() == UNLOCKOUT_CORE {
+                break;
             }
         }
-    });
+    }
+
+    // Drain the FIFO before returning
+    while fifo_is_read_ready() {
+        let _ = fifo_read();
+    }
+    // });
 }
 
+#[link_section = ".data.ram_func"]
+pub fn fifo_is_read_ready() -> bool {
+    let sio = unsafe { &(*pac::SIO::ptr()) };
+    sio.fifo_st.read().vld().bit_is_set()
+}
+
+#[link_section = ".data.ram_func"]
+pub fn fifo_read() -> u32 {
+    let sio = unsafe { &(*pac::SIO::ptr()) };
+    sio.fifo_rd.read().bits()
+}
+
+const PAGE_SIZE: u32 = 256;
+const SECTOR_SIZE: u32 = 4 * 1024;
+const PROGRAM_SIZE: u32 = SECTOR_SIZE * 100; // Protect zone for program
 static mut CORE1_STACK: Stack<4096> = Stack::new();
 fn core1_task(sys_freq: u32) -> ! {
     let pac = unsafe { pac::Peripherals::steal() };
@@ -134,21 +152,11 @@ fn core1_task(sys_freq: u32) -> ! {
         delay.delay_ms(100);
         unsafe {
             // Simulate writing to flash
-            write_flash();
+            cortex_m::interrupt::free(|_cs| {
+                flash::flash_range_program(PROGRAM_SIZE, &[0x00; PAGE_SIZE as usize], true);
+            });
         }
         delay.delay_ms(900);
         sio.fifo.write_blocking(UNLOCKOUT_CORE);
     }
-}
-
-#[inline(never)]
-#[link_section = ".data.ram_func"]
-unsafe fn write_flash() {
-    rom_data::connect_internal_flash();
-    rom_data::flash_exit_xip();
-
-    cortex_m::asm::nop(); // Writing op
-
-    rom_data::flash_flush_cache();
-    rom_data::flash_enter_cmd_xip();
 }
