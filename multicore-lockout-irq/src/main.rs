@@ -103,7 +103,6 @@ fn main() -> ! {
 #[inline(never)]
 #[link_section = ".data.ram_func"]
 extern "C" fn fifo_wait_in_ram() {
-    // critical_section::with(|_| {
     if fifo_is_read_ready() {
         if fifo_read() != LOCKOUT_CORE {
             return;
@@ -120,7 +119,6 @@ extern "C" fn fifo_wait_in_ram() {
     while fifo_is_read_ready() {
         let _ = fifo_read();
     }
-    // });
 }
 
 #[link_section = ".data.ram_func"]
@@ -146,6 +144,7 @@ fn core1_task(sys_freq: u32) -> ! {
 
     let mut delay = cortex_m::delay::Delay::new(core.SYST, sys_freq);
 
+    let buff = [0x00; PAGE_SIZE as usize];
     loop {
         delay.delay_ms(3000);
         sio.fifo.write_blocking(LOCKOUT_CORE);
@@ -153,7 +152,7 @@ fn core1_task(sys_freq: u32) -> ! {
         unsafe {
             // Simulate writing to flash
             cortex_m::interrupt::free(|_cs| {
-                flash::flash_range_program(PROGRAM_SIZE, &[0x00; PAGE_SIZE as usize], true);
+                flash::flash_range_program(PROGRAM_SIZE, &buff, true);
             });
         }
         delay.delay_ms(900);
